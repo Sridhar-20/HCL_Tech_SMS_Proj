@@ -1,4 +1,4 @@
-package util;
+package com.hcl.hcl_sms.util;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

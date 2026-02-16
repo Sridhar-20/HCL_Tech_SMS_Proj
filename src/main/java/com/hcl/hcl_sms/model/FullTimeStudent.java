@@ -1,4 +1,4 @@
-package model;
+package com.hcl.hcl_sms.model;
 
 import java.sql.Date;
 
@@ -6,9 +6,8 @@ public class FullTimeStudent extends Student {
 
     private double fees;
 
-    public FullTimeStudent(String firstName, String lastName,
-            Date joiningDate, double fees) {
-        super(firstName, lastName, joiningDate);
+    public FullTimeStudent(String f, String l, Date d, double fees) {
+        super(f, l, d);
         this.fees = fees;
     }
 

@@ -1,18 +1,20 @@
-package dao;
+package com.hcl.hcl_sms.dao;
 
-import model.*;
-import util.DBConnection;
+import com.hcl.hcl_sms.model.*;
+import com.hcl.hcl_sms.util.DBConnection;
+import org.springframework.stereotype.Repository;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
+@Repository
 public class StudentDAOImpl implements StudentDAO {
 
     @Override
     public void addStudent(Student s) {
 
-        String sql = "INSERT INTO students " +
-                "(first_name, last_name, student_type, joining_date, fees, hours) " +
-                "VALUES (?, ?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO students(first_name,last_name,student_type,joining_date,fees,hours) VALUES (?,?,?,?,?,?)";
 
         try (Connection con = DBConnection.getConnection();
                 PreparedStatement ps = con.prepareStatement(sql)) {
@@ -31,62 +33,97 @@ public class StudentDAOImpl implements StudentDAO {
             }
 
             ps.executeUpdate();
-            System.out.println("✅ Student added successfully!");
-
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
     @Override
-    public void removeStudent(int id) {
-        executeUpdate("DELETE FROM students WHERE id=" + id);
+    public List<Student> getAllStudents() {
+        return getAllStudentsSorted("id");
     }
 
     @Override
-    public void viewStudent(int id) {
-        executeQuery("SELECT * FROM students WHERE id=" + id);
-    }
+    public List<Student> getAllStudentsSorted(String field) {
 
-    @Override
-    public void viewAllStudents() {
-        executeQuery("SELECT * FROM students");
-    }
+        List<Student> students = new ArrayList<>();
+        String sql = "SELECT * FROM students ORDER BY " + field;
 
-    @Override
-    public void sortBy(String field) {
-        executeQuery("SELECT * FROM students ORDER BY " + field);
-    }
-
-    private void executeQuery(String sql) {
         try (Connection con = DBConnection.getConnection();
                 Statement st = con.createStatement();
                 ResultSet rs = st.executeQuery(sql)) {
 
-            System.out.println("\nID | First Name | Last Name | Type | DOJ");
-            System.out.println("-------------------------------------------");
-
             while (rs.next()) {
-                System.out.println(
-                        rs.getInt("id") + " | " +
-                                rs.getString("first_name") + " | " +
-                                rs.getString("last_name") + " | " +
-                                rs.getString("student_type") + " | " +
-                                rs.getDate("joining_date"));
+
+                int id = rs.getInt("id");
+                String firstName = rs.getString("first_name");
+                String lastName = rs.getString("last_name");
+                Date joiningDate = rs.getDate("joining_date");
+                String type = rs.getString("student_type");
+
+                Student student;
+
+                if ("FULL_TIME".equals(type)) {
+                    student = new FullTimeStudent(firstName, lastName, joiningDate, rs.getDouble("fees"));
+                } else {
+                    student = new PartTimeStudent(firstName, lastName, joiningDate, rs.getInt("hours"));
+                }
+
+                student.setId(id);
+                students.add(student);
             }
 
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        return students;
     }
 
-    private void executeUpdate(String sql) {
+    @Override
+    public Student getStudentById(int id) {
+
+        String sql = "SELECT * FROM students WHERE id=?";
+        Student student = null;
+
         try (Connection con = DBConnection.getConnection();
-                Statement st = con.createStatement()) {
+                PreparedStatement ps = con.prepareStatement(sql)) {
 
-            st.executeUpdate(sql);
-            System.out.println("✅ Operation successful!");
+            ps.setInt(1, id);
+            ResultSet rs = ps.executeQuery();
 
+            if (rs.next()) {
+                String firstName = rs.getString("first_name");
+                String lastName = rs.getString("last_name");
+                Date joiningDate = rs.getDate("joining_date");
+                String type = rs.getString("student_type");
+
+                if ("FULL_TIME".equals(type)) {
+                    student = new FullTimeStudent(firstName, lastName, joiningDate, rs.getDouble("fees"));
+                } else {
+                    student = new PartTimeStudent(firstName, lastName, joiningDate, rs.getInt("hours"));
+                }
+
+                student.setId(rs.getInt("id"));
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return student;
+    }
+
+    @Override
+    public void removeStudent(int id) {
+
+        String sql = "DELETE FROM students WHERE id=?";
+
+        try (Connection con = DBConnection.getConnection();
+                PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setInt(1, id);
+            ps.executeUpdate();
         } catch (Exception e) {
             e.printStackTrace();
         }

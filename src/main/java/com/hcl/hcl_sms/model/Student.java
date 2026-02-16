@@ -1,9 +1,10 @@
-package model;
+package com.hcl.hcl_sms.model;
 
 import java.sql.Date;
 
 public abstract class Student {
 
+    protected int id;
     protected String firstName;
     protected String lastName;
     protected Date joiningDate;
@@ -12,6 +13,14 @@ public abstract class Student {
         this.firstName = firstName;
         this.lastName = lastName;
         this.joiningDate = joiningDate;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getFirstName() {
